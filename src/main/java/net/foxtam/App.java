@@ -54,7 +54,7 @@ public class App {
         System.out.println("Enter your PIN:");
         String pin = scanner.nextLine();
 
-        Optional<Card> optionalCard = cards.getCard(number, pin);
+        Optional<Card> optionalCard = cards.findCard(number, pin);
         if (optionalCard.isPresent()) {
             System.out.println("You have successfully logged in!");
             accountInteraction(optionalCard.get());

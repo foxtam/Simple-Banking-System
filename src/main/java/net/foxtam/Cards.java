@@ -14,7 +14,7 @@ public class Cards {
         cards.add(card);
     }
 
-    public Optional<Card> getCard(String number, String pin) {
+    public Optional<Card> findCard(String number, String pin) {
         return cards.stream()
                 .filter(card ->
                         card.getNumber().equals(number) && card.getPin().equals(pin))
