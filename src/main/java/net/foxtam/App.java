@@ -7,26 +7,20 @@ public class App {
 
     private final Scanner scanner = new Scanner(System.in);
     private final Cards cards = new Cards();
-    private boolean mainMenuContinue = true;
+    private boolean showMainMenu = true;
 
     public static void main(String[] args) {
         new App().run();
     }
 
     private void run() {
-        while (mainMenuContinue) {
+        while (showMainMenu) {
             showMenu();
             int answer = readUserAnswer();
             switch (answer) {
-                case 0:
-                    mainMenuContinue = false;
-                    break;
-                case 1:
-                    createAccount();
-                    break;
-                case 2:
-                    logIntoAccount();
-                    break;
+                case 0 -> showMainMenu = false;
+                case 1 -> createAccount();
+                case 2 -> logIntoAccount();
             }
         }
         System.out.println("Bye!");
@@ -75,7 +69,7 @@ public class App {
             int answer = readUserAnswer();
             switch (answer) {
                 case 0:
-                    mainMenuContinue = false;
+                    showMainMenu = false;
                     return;
                 case 1:
                     System.out.println("Balance: " + card.getBalance());
