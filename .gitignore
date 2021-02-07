@@ -150,5 +150,5 @@ gradle-app.setting
 **/build/
 
 # End of https://www.toptal.com/developers/gitignore/api/java,intellij,gradle
-path-to-database
+cards.db
 src/main/java/net/foxtam/tests/*

@@ -1,16 +1,30 @@
 package net.foxtam;
 
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.Scanner;
 
 public class App {
 
     private final Scanner scanner = new Scanner(System.in);
-    private final Cards cards = new Cards();
+    private final Cards cards;
     private boolean showMainMenu = true;
 
+    public App(String fileName) {
+        this.cards = Cards.loadFromDb(fileName);
+    }
+
     public static void main(String[] args) {
-        new App().run();
+        String dbFileName = getValueBy(args, "-fileName");
+        new App(dbFileName).run();
+    }
+
+    private static String getValueBy(String[] keys, String key) {
+        int index = Arrays.asList(keys).indexOf(key);
+        if (index == -1) {
+            throw new IllegalArgumentException(key);
+        }
+        return keys[index + 1];
     }
 
     private void run() {

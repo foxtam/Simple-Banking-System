@@ -12,16 +12,17 @@ public class Card {
     private final String pin;
     private int balance;
 
-    public Card(String number, String pin) {
+    public Card(String number, String pin, int balance) {
         this.number = number;
         this.pin = pin;
-        this.balance = 0;
+        this.balance = balance;
     }
 
     public static Card generateRandom() {
         return new Card(
                 getRandomNumber(),
-                getRandomPIN());
+                getRandomPIN(),
+                0);
     }
 
     private static String getRandomNumber() {
