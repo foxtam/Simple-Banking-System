@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class Cards {
     private static final String CARDS_TABLE = "CARDS";
-    private static final String ID = "id";
+    private static final String ID_COLUMN = "id";
     private static final String NUMBER_COLUMN = "number";
     private static final String PIN_COLUMN = "pin";
     private static final String BALANCE_COLUMN = "balance";
@@ -43,7 +43,7 @@ public class Cards {
                                 "%s TEXT NOT NULL, " +
                                 "%s INTEGER DEFAULT 0)",
                         CARDS_TABLE,
-                        ID,
+                        ID_COLUMN,
                         NUMBER_COLUMN,
                         PIN_COLUMN,
                         BALANCE_COLUMN);
