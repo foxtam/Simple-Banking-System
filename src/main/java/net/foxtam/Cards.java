@@ -94,7 +94,7 @@ public class Cards {
     }
 
     public Optional<Card> findCard(String number, String pin) throws SQLException {
-        AtomicReference<Card> atomicReference = new AtomicReference<>();
+        AtomicReference<Card> cardReference = new AtomicReference<>();
 
         connectAnd(statement -> {
             String query =
@@ -111,11 +111,11 @@ public class Cards {
             try (ResultSet resultSet = statement.executeQuery(query)) {
                 if (resultSet.next()) {
                     int balance = resultSet.getInt(BALANCE_COLUMN);
-                    atomicReference.set(new Card(number, pin, balance));
+                    cardReference.set(new Card(number, pin, balance));
                 }
             }
         });
 
-        return Optional.ofNullable(atomicReference.get());
+        return Optional.ofNullable(cardReference.get());
     }
 }
