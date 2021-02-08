@@ -5,19 +5,19 @@ import java.util.Arrays;
 import java.util.Optional;
 import java.util.Scanner;
 
-public class App {
+public class Bank {
 
     private final Scanner scanner = new Scanner(System.in);
     private final Cards cards;
     private boolean showMainMenu = true;
 
-    public App(String fileName) throws SQLException {
+    public Bank(String fileName) throws SQLException {
         this.cards = Cards.loadFromDb(fileName);
     }
 
     public static void main(String[] args) throws SQLException {
         String dbFileName = getValueBy(args, "-fileName");
-        new App(dbFileName).run();
+        new Bank(dbFileName).run();
     }
 
     private static String getValueBy(String[] keys, String key) {
@@ -89,15 +89,19 @@ public class App {
                 case 1:
                     System.out.println("Balance: " + card.getBalance());
                     break;
-                case 2:
+                case 5:
                     return;
+
             }
         }
     }
 
     private void printAccountMenu() {
         System.out.println("1. Balance\n" +
-                "2. Log out\n" +
+                "2. Add income\n" +
+                "3. Do transfer\n" +
+                "4. Close account\n" +
+                "5. Log out\n" +
                 "0. Exit");
     }
 }
