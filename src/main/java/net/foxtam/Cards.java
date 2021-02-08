@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class Cards {
-    private static final String CARDS_TABLE = "CARDS";
+    private static final String TABLE_NAME = "CARDS";
     private static final String ID_COLUMN = "id";
     private static final String NUMBER_COLUMN = "number";
     private static final String PIN_COLUMN = "pin";
@@ -42,7 +42,7 @@ public class Cards {
                                 "%s TEXT NOT NULL, " +
                                 "%s TEXT NOT NULL, " +
                                 "%s INTEGER DEFAULT 0)",
-                        CARDS_TABLE,
+                        TABLE_NAME,
                         ID_COLUMN,
                         NUMBER_COLUMN,
                         PIN_COLUMN,
@@ -58,7 +58,7 @@ public class Cards {
 
     private ConsumerThrowSQLException<Statement> countDbRows(AtomicInteger count) {
         return statement -> {
-            String countQuery = "SELECT COUNT(1) as count FROM " + CARDS_TABLE;
+            String countQuery = "SELECT COUNT(1) as count FROM " + TABLE_NAME;
             try (ResultSet resultSet = statement.executeQuery(countQuery)) {
                 if (resultSet.next()) {
                     count.set(resultSet.getInt("count"));
@@ -83,7 +83,7 @@ public class Cards {
             String query =
                     String.format(
                             "INSERT INTO %s VALUES (%d, %s, %s, %d);",
-                            CARDS_TABLE,
+                            TABLE_NAME,
                             ++numberOfCards,
                             card.getNumber(),
                             card.getPin(),
@@ -102,7 +102,7 @@ public class Cards {
                             "SELECT %s FROM %s " +
                                     "WHERE %s = %s AND %s = %s;",
                             BALANCE_COLUMN,
-                            CARDS_TABLE,
+                            TABLE_NAME,
                             NUMBER_COLUMN,
                             number,
                             PIN_COLUMN,
