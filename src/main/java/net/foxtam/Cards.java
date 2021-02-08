@@ -9,7 +9,6 @@ import java.sql.Statement;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
 
 public class Cards {
     private static final String CARDS_TABLE = "CARDS";
@@ -27,7 +26,7 @@ public class Cards {
         numberOfCards = countCards();
     }
 
-    private void connectAnd(Consumer<Statement> consumer) throws SQLException {
+    private void connectAnd(ConsumerThrowSQLException<Statement> consumer) throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             try (Statement statement = connection.createStatement()) {
                 consumer.accept(statement);
@@ -35,7 +34,7 @@ public class Cards {
         }
     }
 
-    private static void createTable(Statement statement) {
+    private static void createTable(Statement statement) throws SQLException {
         String query =
                 String.format(
                         "CREATE TABLE IF NOT EXISTS %s(" +
@@ -48,11 +47,7 @@ public class Cards {
                         NUMBER_COLUMN,
                         PIN_COLUMN,
                         BALANCE_COLUMN);
-        try {
-            statement.executeUpdate(query);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        statement.executeUpdate(query);
     }
 
     private int countCards() throws SQLException {
@@ -61,15 +56,13 @@ public class Cards {
         return count.get();
     }
 
-    private Consumer<Statement> countDbRows(AtomicInteger count) {
+    private ConsumerThrowSQLException<Statement> countDbRows(AtomicInteger count) {
         return statement -> {
             String countQuery = "SELECT COUNT(1) as count FROM " + CARDS_TABLE;
             try (ResultSet resultSet = statement.executeQuery(countQuery)) {
                 if (resultSet.next()) {
                     count.set(resultSet.getInt("count"));
                 }
-            } catch (SQLException e) {
-                e.printStackTrace();
             }
         };
     }
@@ -85,7 +78,7 @@ public class Cards {
         connectAnd(insertCard(card));
     }
 
-    private Consumer<Statement> insertCard(Card card) {
+    private ConsumerThrowSQLException<Statement> insertCard(Card card) {
         return statement -> {
             String query =
                     String.format(
@@ -96,11 +89,7 @@ public class Cards {
                             card.getPin(),
                             card.getBalance());
 
-            try {
-                statement.executeUpdate(query);
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+            statement.executeUpdate(query);
         };
     }
 
@@ -124,8 +113,6 @@ public class Cards {
                     int balance = resultSet.getInt(BALANCE_COLUMN);
                     atomicReference.set(new Card(number, pin, balance));
                 }
-            } catch (SQLException e) {
-                e.printStackTrace();
             }
         });
 
