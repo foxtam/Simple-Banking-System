@@ -1,5 +1,6 @@
 package net.foxtam;
 
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.Scanner;
@@ -10,11 +11,11 @@ public class App {
     private final Cards cards;
     private boolean showMainMenu = true;
 
-    public App(String fileName) {
+    public App(String fileName) throws SQLException {
         this.cards = Cards.loadFromDb(fileName);
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws SQLException {
         String dbFileName = getValueBy(args, "-fileName");
         new App(dbFileName).run();
     }
@@ -27,7 +28,7 @@ public class App {
         return keys[index + 1];
     }
 
-    private void run() {
+    private void run() throws SQLException {
         while (showMainMenu) {
             showMenu();
             int answer = readUserAnswer();
@@ -50,7 +51,7 @@ public class App {
         return Integer.parseInt(scanner.nextLine());
     }
 
-    private void createAccount() {
+    private void createAccount() throws SQLException {
         Card card = Card.generateRandom();
         cards.add(card);
 
@@ -61,7 +62,7 @@ public class App {
         System.out.println(card.getPin());
     }
 
-    private void logIntoAccount() {
+    private void logIntoAccount() throws SQLException {
         System.out.println("Enter your card number:");
         String number = scanner.nextLine();
 

@@ -21,19 +21,17 @@ public class Cards {
     private final SQLiteDataSource dataSource;
     private int numberOfCards;
 
-    private Cards(SQLiteDataSource dataSource) {
+    private Cards(SQLiteDataSource dataSource) throws SQLException {
         this.dataSource = dataSource;
         connectAnd(Cards::createTable);
         numberOfCards = countCards();
     }
 
-    private void connectAnd(Consumer<Statement> consumer) {
+    private void connectAnd(Consumer<Statement> consumer) throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             try (Statement statement = connection.createStatement()) {
                 consumer.accept(statement);
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
     }
 
@@ -57,7 +55,7 @@ public class Cards {
         }
     }
 
-    private int countCards() {
+    private int countCards() throws SQLException {
         AtomicInteger count = new AtomicInteger();
         connectAnd(countDbRows(count));
         return count.get();
@@ -76,14 +74,14 @@ public class Cards {
         };
     }
 
-    public static Cards loadFromDb(String dbFileName) {
+    public static Cards loadFromDb(String dbFileName) throws SQLException {
         String url = "jdbc:sqlite:" + dbFileName;
         SQLiteDataSource dataSource = new SQLiteDataSource();
         dataSource.setUrl(url);
         return new Cards(dataSource);
     }
 
-    public void add(Card card) {
+    public void add(Card card) throws SQLException {
         connectAnd(insertCard(card));
     }
 
@@ -97,6 +95,7 @@ public class Cards {
                             card.getNumber(),
                             card.getPin(),
                             card.getBalance());
+
             try {
                 statement.executeUpdate(query);
             } catch (SQLException e) {
@@ -105,7 +104,7 @@ public class Cards {
         };
     }
 
-    public Optional<Card> findCard(String number, String pin) {
+    public Optional<Card> findCard(String number, String pin) throws SQLException {
         AtomicReference<Card> atomicReference = new AtomicReference<>();
 
         connectAnd(statement -> {
