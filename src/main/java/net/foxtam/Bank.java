@@ -89,14 +89,17 @@ public class Bank {
                 case 1:
                     System.out.println("Balance: " + card.getBalance());
                     break;
-                case 2:
+                case 5:
                     return;
+
             }
         }
     }
 
     private void printAccountMenu() {
         System.out.println("1. Balance\n" +
+                "2. Add income\n" +
+                "3. Do transfer\n" +
                 "4. Close account\n" +
                 "5. Log out\n" +
                 "0. Exit");
