@@ -66,7 +66,7 @@ public class Bank {
         String number = getRandomNumber();
         String pin = getRandomPIN();
         addCard(number, pin, 0);
-        return findCard(number, pin).get();
+        return findCard(number, pin).orElseThrow(IllegalStateException::new);
     }
 
     private static String getRandomNumber() {
@@ -192,10 +192,6 @@ public class Bank {
                 }
             }
         };
-    }
-
-    private int nextNewCardID() throws SQLException {
-        return countCards() + 1;
     }
 
     public class Card {
