@@ -25,12 +25,10 @@ public class Bank {
     private static final Random random = new Random();
 
     private final SQLiteDataSource dataSource;
-    private int numberOfCards;
 
     private Bank(SQLiteDataSource dataSource) throws SQLException {
         this.dataSource = dataSource;
         connectAnd(Bank::createTable);
-        numberOfCards = countCards();
     }
 
     private void connectAnd(ConsumerThrowSQLException<Statement> consumer) throws SQLException {
@@ -55,23 +53,6 @@ public class Bank {
                         PIN_COLUMN,
                         BALANCE_COLUMN);
         statement.executeUpdate(query);
-    }
-
-    private int countCards() throws SQLException {
-        AtomicInteger count = new AtomicInteger();
-        connectAnd(countDbRows(count));
-        return count.get();
-    }
-
-    private ConsumerThrowSQLException<Statement> countDbRows(AtomicInteger count) {
-        return statement -> {
-            String countQuery = "SELECT COUNT(1) as count FROM " + TABLE_NAME;
-            try (ResultSet resultSet = statement.executeQuery(countQuery)) {
-                if (resultSet.next()) {
-                    count.set(resultSet.getInt("count"));
-                }
-            }
-        };
     }
 
     public static Bank loadCardsFromDb(String dbFileName) throws SQLException {
@@ -147,7 +128,7 @@ public class Bank {
                     String.format(
                             "INSERT INTO %s VALUES (%d, %s, %s, %d);",
                             TABLE_NAME,
-                            ++numberOfCards,
+                            countCards() + 1,
                             number,
                             pin,
                             balance);
@@ -194,6 +175,23 @@ public class Bank {
 
     private static int sum(int[] digits) {
         return IntStream.of(digits).sum();
+    }
+
+    private int countCards() throws SQLException {
+        AtomicInteger count = new AtomicInteger();
+        connectAnd(countDbRows(count));
+        return count.get();
+    }
+
+    private ConsumerThrowSQLException<Statement> countDbRows(AtomicInteger count) {
+        return statement -> {
+            String countQuery = "SELECT COUNT(1) as count FROM " + TABLE_NAME;
+            try (ResultSet resultSet = statement.executeQuery(countQuery)) {
+                if (resultSet.next()) {
+                    count.set(resultSet.getInt("count"));
+                }
+            }
+        };
     }
 
     private int nextNewCardID() throws SQLException {
