@@ -21,6 +21,7 @@ public class Bank {
     private static final String BALANCE_COLUMN = "balance";
 
     private static final int numberLength = 16;
+    private static final int pinLength = 4;
     private static final int[] numberPrefix = {4, 0, 0, 0, 0, 0};
     private static final Random random = new Random();
 
@@ -44,8 +45,8 @@ public class Bank {
                 String.format(
                         "CREATE TABLE IF NOT EXISTS %s(" +
                                 "%s INTEGER PRIMARY KEY, " +
-                                "%s TEXT NOT NULL, " +
-                                "%s TEXT NOT NULL, " +
+                                "%s VARCHAR(16) NOT NULL, " +
+                                "%s VARCHAR(4) NOT NULL, " +
                                 "%s INTEGER DEFAULT 0)",
                         TABLE_NAME,
                         ID_COLUMN,
@@ -53,6 +54,67 @@ public class Bank {
                         PIN_COLUMN,
                         BALANCE_COLUMN);
         statement.executeUpdate(query);
+    }
+
+    public static boolean isCorrectCardNumber(String number) {
+        if (number.length() != numberLength || hasNotDigit(number)) return false;
+        return checkLuhn(number);
+    }
+
+    private static boolean hasNotDigit(String number) {
+        for (char c : number.toCharArray()) {
+            if (c < '0' || c > '9') return true;
+        }
+        return false;
+    }
+
+    private static boolean checkLuhn(String number) {
+        int[] digits = toIntArray(number);
+        setCheckDigit(digits);
+        return asString(digits).equals(number);
+    }
+
+    private static int[] toIntArray(String number) {
+        int[] array = new int[number.length()];
+        for (int i = 0; i < number.length(); i++) {
+            array[i] = number.charAt(i) - '0';
+        }
+        return array;
+    }
+
+    private static void setCheckDigit(int[] digits) {
+        int[] copy = Arrays.copyOf(digits, numberLength);
+        twiceEvens(copy);
+        subtractNine(copy);
+        int sum = sum(copy);
+        int checkDigit = (10 - (sum % 10)) % 10;
+        digits[numberLength - 1] = checkDigit;
+    }
+
+    private static String asString(int[] digits) {
+        StringBuilder builder = new StringBuilder();
+        for (int digit : digits) {
+            builder.append(digit);
+        }
+        return builder.toString();
+    }
+
+    private static void twiceEvens(int[] digits) {
+        for (int i = 0; i < digits.length; i += 2) {
+            digits[i] *= 2;
+        }
+    }
+
+    private static void subtractNine(int[] digits) {
+        for (int i = 0; i < numberLength; i += 2) {
+            if (digits[i] > 9) {
+                digits[i] -= 9;
+            }
+        }
+    }
+
+    private static int sum(int[] digits) {
+        return IntStream.of(digits).limit(numberLength - 1).sum();
     }
 
     public static Bank loadCardsFromDb(String dbFileName) throws SQLException {
@@ -76,7 +138,7 @@ public class Bank {
     }
 
     private static String getRandomPIN() {
-        return asString(getNRandomDigits(4));
+        return asString(getNRandomDigits(pinLength));
     }
 
     private void addCard(String number, String pin, int balance) throws SQLException {
@@ -97,23 +159,6 @@ public class Bank {
         return cardNumberDigits;
     }
 
-    private static void setCheckDigit(int[] digits) {
-        int[] copy = Arrays.copyOf(digits, numberLength);
-        twiceEvens(copy);
-        subtractNine(copy);
-        int sum = sum(copy);
-        int checkDigit = (10 - (sum % 10)) % 10;
-        digits[numberLength - 1] = checkDigit;
-    }
-
-    private static String asString(int[] digits) {
-        StringBuilder builder = new StringBuilder();
-        for (int digit : digits) {
-            builder.append(digit);
-        }
-        return builder.toString();
-    }
-
     private static int[] getNRandomDigits(int length) {
         int[] digits = new int[length];
         for (int i = 0; i < length; i++) {
@@ -126,9 +171,12 @@ public class Bank {
         return statement -> {
             String query =
                     String.format(
-                            "INSERT INTO %s VALUES (%d, %s, %s, %d);",
+                            "INSERT INTO %s (%s, %s, %s) VALUES ('%s', '%s', %d);",
                             TABLE_NAME,
-                            countCards() + 1,
+                            NUMBER_COLUMN,
+                            PIN_COLUMN,
+                            BALANCE_COLUMN,
+//                            countCards() + 1,
                             number,
                             pin,
                             balance);
@@ -142,7 +190,7 @@ public class Bank {
             String query =
                     String.format(
                             "SELECT %s FROM %s " +
-                                    "WHERE %s = %s AND %s = %s;",
+                                    "WHERE %s = '%s' AND %s = '%s';",
                             ID_COLUMN,
                             TABLE_NAME,
                             NUMBER_COLUMN,
@@ -157,24 +205,6 @@ public class Bank {
                 }
             }
         };
-    }
-
-    private static void twiceEvens(int[] digits) {
-        for (int i = 0; i < digits.length; i += 2) {
-            digits[i] *= 2;
-        }
-    }
-
-    private static void subtractNine(int[] digits) {
-        for (int i = 0; i < numberLength; i += 2) {
-            if (digits[i] > 9) {
-                digits[i] -= 9;
-            }
-        }
-    }
-
-    private static int sum(int[] digits) {
-        return IntStream.of(digits).sum();
     }
 
     private int countCards() throws SQLException {
@@ -194,11 +224,83 @@ public class Bank {
         };
     }
 
+    public Optional<Card> findCard(String number) throws SQLException {
+        AtomicReference<Card> cardReference = new AtomicReference<>();
+        connectAnd(writeCard(number, cardReference));
+        return Optional.ofNullable(cardReference.get());
+    }
+
+    private ConsumerThrowSQLException<Statement> writeCard(String number, AtomicReference<Card> cardReference) {
+        return statement -> {
+            String query =
+                    String.format(
+                            "SELECT %s FROM %s " +
+                                    "WHERE %s = '%s'",
+                            ID_COLUMN,
+                            TABLE_NAME,
+                            NUMBER_COLUMN,
+                            number);
+
+            try (ResultSet resultSet = statement.executeQuery(query)) {
+                if (resultSet.next()) {
+                    int id = resultSet.getInt(ID_COLUMN);
+                    cardReference.set(new Card(id));
+                }
+            }
+        };
+    }
+
     public class Card {
         private final int id;
 
         private Card(int id) {
             this.id = id;
+        }
+
+        public String getNumber() throws SQLException {
+            return getProperty(NUMBER_COLUMN);
+        }
+
+        private String getProperty(String columnName) throws SQLException {
+            AtomicReference<String> value = new AtomicReference<>();
+            connectAnd(writeProperty(columnName, value));
+            return value.get();
+        }
+
+        private ConsumerThrowSQLException<Statement> writeProperty(String columnName, AtomicReference<String> value) {
+            return statement -> {
+                String query =
+                        String.format(
+                                "SELECT %s FROM %s WHERE %s = %d",
+                                columnName,
+                                TABLE_NAME,
+                                ID_COLUMN,
+                                id);
+
+                try (ResultSet resultSet = statement.executeQuery(query)) {
+                    if (resultSet.next()) {
+                        value.set(resultSet.getString(columnName));
+                    } else {
+                        throw new IllegalStateException("Card(id=" + id + " not found.");
+                    }
+                }
+            };
+        }
+
+        public String getPin() throws SQLException {
+            return getProperty(PIN_COLUMN);
+        }
+
+        public void transferMoneyTo(Card targetCard, int moneyAmount) throws NotEnoughMoneyException, SQLException {
+            if (getBalance() < moneyAmount) {
+                throw new NotEnoughMoneyException("Not enough money");
+            }
+            addIncome(-moneyAmount);
+            targetCard.addIncome(moneyAmount);
+        }
+
+        public int getBalance() throws SQLException {
+            return Integer.parseInt(getProperty(BALANCE_COLUMN));
         }
 
         public void addIncome(int income) throws SQLException {
@@ -216,42 +318,17 @@ public class Bank {
             });
         }
 
-        public int getBalance() throws SQLException {
-            return Integer.parseInt(getProperty(BALANCE_COLUMN));
-        }
-
-        private String getProperty(String columnName) throws SQLException {
-            AtomicReference<String> value = new AtomicReference<>();
-            connectAnd(writeProperty(columnName, value));
-            return value.get();
-        }
-
-        private ConsumerThrowSQLException<Statement> writeProperty(String columnName, AtomicReference<String> value) {
-            return statement -> {
+        public void delete() throws SQLException {
+            connectAnd(statement -> {
                 String query =
                         String.format(
-                                "SELECT %s FROM %s WHERE %s = %s",
-                                columnName,
+                                "DELETE FROM %s WHERE %s = %d",
                                 TABLE_NAME,
                                 ID_COLUMN,
                                 id);
 
-                try (ResultSet resultSet = statement.executeQuery(query)) {
-                    if (resultSet.next()) {
-                        value.set(resultSet.getString(columnName));
-                    } else {
-                        throw new IllegalStateException("Card(id=" + id + " not found.");
-                    }
-                }
-            };
-        }
-
-        public String getNumber() throws SQLException {
-            return getProperty(NUMBER_COLUMN);
-        }
-
-        public String getPin() throws SQLException {
-            return getProperty(PIN_COLUMN);
+                statement.executeUpdate(query);
+            });
         }
     }
 }

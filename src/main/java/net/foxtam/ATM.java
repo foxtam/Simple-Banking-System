@@ -48,7 +48,13 @@ public class ATM {
     }
 
     private int readUserAnswer() {
-        return Integer.parseInt(scanner.nextLine());
+        while (true) {
+            try {
+                return Integer.parseInt(scanner.nextLine());
+            } catch (NumberFormatException e) {
+                System.out.println("Incorrect input. Try again:");
+            }
+        }
     }
 
     private void createAccount() throws SQLException {
@@ -91,23 +97,15 @@ public class ATM {
                 case 2:
                     addIncome(card);
                     break;
-//                case 3:
-//                    doTransfer();
-//                    break;
-//                case 4:
-//                    closeAccount();
-//                    break;
+                case 3:
+                    doTransfer(card);
+                    break;
+                case 4:
+                    closeAccount(card);
                 case 5:
                     return;
             }
         }
-    }
-
-    private void addIncome(Bank.Card card) throws SQLException {
-        System.out.println("Enter income:");
-        int income = Integer.parseInt(scanner.nextLine());
-        card.addIncome(income);
-        System.out.println("Income was added!");
     }
 
     private void printAccountMenu() {
@@ -117,5 +115,43 @@ public class ATM {
                 "4. Close account\n" +
                 "5. Log out\n" +
                 "0. Exit");
+    }
+
+    private void addIncome(Bank.Card card) throws SQLException {
+        System.out.println("Enter income:");
+        int income = Integer.parseInt(scanner.nextLine());
+        card.addIncome(income);
+        System.out.println("Income was added!");
+    }
+
+    private void doTransfer(Bank.Card card) throws SQLException {
+        System.out.println("Transfer\nEnter card number:");
+        String targetNumber = scanner.nextLine().trim();
+        if (targetNumber.equals(card.getNumber())) {
+            System.out.println("You can't transfer money to the same account!");
+        } else if (!Bank.isCorrectCardNumber(targetNumber)) {
+            System.out.println("Probably you made mistake in the card number. Please try again!");
+        } else {
+            Optional<Bank.Card> targetCard = bank.findCard(targetNumber);
+            if (targetCard.isEmpty()) {
+                System.out.println("Such a card does not exist.");
+            } else {
+                transfer(card, targetCard.get());
+            }
+        }
+    }
+
+    private void closeAccount(Bank.Card card) throws SQLException {
+        card.delete();
+    }
+
+    private void transfer(Bank.Card card, Bank.Card targetCard) throws SQLException {
+        System.out.println("Enter how much money you want to transfer:");
+        int moneyAmount = Integer.parseInt(scanner.nextLine());
+        try {
+            card.transferMoneyTo(targetCard, moneyAmount);
+        } catch (NotEnoughMoneyException e) {
+            System.out.println("Not enough money!");
+        }
     }
 }
