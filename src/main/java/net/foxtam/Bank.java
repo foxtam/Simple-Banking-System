@@ -176,7 +176,6 @@ public class Bank {
                             NUMBER_COLUMN,
                             PIN_COLUMN,
                             BALANCE_COLUMN,
-//                            countCards() + 1,
                             number,
                             pin,
                             balance);
@@ -189,8 +188,7 @@ public class Bank {
         return statement -> {
             String query =
                     String.format(
-                            "SELECT %s FROM %s " +
-                                    "WHERE %s = '%s' AND %s = '%s';",
+                            "SELECT %s FROM %s WHERE %s = '%s' AND %s = '%s';",
                             ID_COLUMN,
                             TABLE_NAME,
                             NUMBER_COLUMN,
@@ -205,12 +203,6 @@ public class Bank {
                 }
             }
         };
-    }
-
-    private int countCards() throws SQLException {
-        AtomicInteger count = new AtomicInteger();
-        connectAnd(countDbRows(count));
-        return count.get();
     }
 
     private ConsumerThrowSQLException<Statement> countDbRows(AtomicInteger count) {
